@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".MainActivity">
+
+    <TextView
+        android:id="@+id/uriText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="PDF Url"
+        android:layout_margin="30dp"
+        android:gravity="center"
+        android:layout_gravity="center"
+        android:layout_marginTop="60dp"
+        android:textStyle="bold|italic"
+        android:textSize="20sp"
+        />
+
+
+    <Button
+        android:id="@+id/uploadPdf"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Upload PDF Here"
+        android:layout_margin="20dp"
+        android:textAllCaps="false"
+        android:layout_marginTop="10dp"
+        android:backgroundTint="@color/teal_700"
+        android:textStyle="bold|italic" />
+
+<!--    <TextView-->
+<!--        android:id="@+id/loadText"-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:text="h"-->
+<!--        android:gravity="center"-->
+<!--        android:layout_gravity="center"-->
+<!--        android:layout_marginTop="50dp"-->
+<!--        />-->
+
+    <Button
+        android:id="@+id/downloadPdf"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Download PDF"
+        android:layout_margin="20dp"
+        android:textAllCaps="false"
+        android:background="@color/black"
+        android:textStyle="bold|italic" />
+
+</LinearLayout>
