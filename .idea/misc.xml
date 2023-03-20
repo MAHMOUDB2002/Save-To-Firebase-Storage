@@ -3,7 +3,11 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
-        <entry key="..\:/UplaodPDFtoFirebaseStorage/app/src/main/res/layout/activity_main.xml" value="0.36666666666666664" />
+        <entry key="..\:/UplaodPDFtoFirebaseStorage/app/src/main/res/drawable/delete.xml" value="0.159" />
+        <entry key="..\:/UplaodPDFtoFirebaseStorage/app/src/main/res/layout/activity_main.xml" value="0.23076923076923078" />
+        <entry key="..\:/UplaodPDFtoFirebaseStorage/app/src/main/res/layout/activity_main2.xml" value="0.25416666666666665" />
+        <entry key="..\:/UplaodPDFtoFirebaseStorage/app/src/main/res/layout/activity_show_pdf_files.xml" value="0.25416666666666665" />
+        <entry key="..\:/UplaodPDFtoFirebaseStorage/app/src/main/res/layout/pdf_item.xml" value="0.264" />
       </map>
     </option>
   </component>
