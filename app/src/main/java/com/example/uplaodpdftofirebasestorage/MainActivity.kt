@@ -12,6 +12,7 @@ import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Environment
+import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
@@ -27,41 +28,43 @@ import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.ktx.database
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
+import com.google.firebase.storage.ktx.storage
 import kotlinx.android.synthetic.main.activity_main.*
 import java.net.URI
 
 // Run it
 class MainActivity : AppCompatActivity()
-// , PdfAdapter.OnItemClickListener
 {
-    val ReqCodePDF: Int = 0
-    var pdfUri: Uri? = null
-    lateinit var pdfName: String
-    lateinit var mStorage: StorageReference
-    private lateinit var progressDialog: ProgressDialog
-    private lateinit var swipeRefresh: SwipeRefreshLayout
+    companion object {
+        lateinit var downloadManager: DownloadManager
+        val ReqCodePDF: Int = 0
+        var pdfUri: Uri? = null
+        lateinit var pdfName: String
+        lateinit var storageReference: StorageReference
+        lateinit var db: FirebaseFirestore
+        private lateinit var progressDialog: ProgressDialog
+        private lateinit var swipeRefresh: SwipeRefreshLayout
+        lateinit var storage: FirebaseStorage
+        lateinit var reference: StorageReference
+
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        mStorage = FirebaseStorage.getInstance().getReference("Upload")
+        // mStorage = FirebaseStorage.getInstance().getReference("Upload")
 
-//        swipeRefresh.setOnRefreshListener {
-//            getData()
-//        }
-
-//        storage = FirebaseStorage.getInstance().reference.child("Uploads")
-//        pdfRecyclerView.apply {
-//            layoutManager = LinearLayoutManager(
-//                this@MainActivity
-//            )
-//        }
-//
-//        getData()
+        downloadManager = getSystemService(AppCompatActivity.DOWNLOAD_SERVICE) as DownloadManager
+        db = Firebase.firestore
+        storageReference = FirebaseStorage.getInstance().reference
+        //  .getReference("Upload")
+        reference = storageReference
+        storage = Firebase.storage
 
 
         showPdfFiles.setOnClickListener {
@@ -69,32 +72,181 @@ class MainActivity : AppCompatActivity()
             startActivity(intent)
         }
 
+        uriText.setOnClickListener {
+            val intent = Intent()
+            intent.setType("pdf/*")
+            //  intent.setType("application/pdf")
+            intent.setAction(Intent.ACTION_GET_CONTENT)
+            startActivityForResult(Intent.createChooser(intent, "Select PDF File"), ReqCodePDF)
+
+        }
+
+
 
         uploadPdf.setOnClickListener {
-            if (uriText.text.isNullOrEmpty()) {
-                Toast.makeText(this, "Please Enter PDF Name", Toast.LENGTH_LONG).show()
-            } else {
-                pdfName = uriText.text.toString()
+//            if (uriText.text.isNullOrEmpty()&& pdfName2.text.isNullOrEmpty()) {
+//                Toast.makeText(this, "Please Enter PDF Name & choose PDF File", Toast.LENGTH_LONG).show()
+//            }else {
+            if (pdfName2.text.isNotEmpty() && uriText.text.isNotEmpty()) {
+                // pdfName = "PDF File"
+                pdfName = pdfName2.text.toString().trim()
                 progressDialog = ProgressDialog(this)
                 progressDialog.setTitle("Uploading....")
+                progressDialog.setMessage("Wait the file is Uploading....")
                 progressDialog.setCancelable(false)
                 progressDialog.setCanceledOnTouchOutside(false)
-                //progressDialog.show()
+                progressDialog.show()
 
-
-                val intent = Intent()
-                intent.setType("pdf/*")
-                //  intent.setType("application/pdf")
-                intent.setAction(Intent.ACTION_GET_CONTENT)
-                startActivityForResult(Intent.createChooser(intent, "Select PDF File"), ReqCodePDF)
-
-
-                // pdfRecyclerView.adapter?.notifyDataSetChanged()
+                reference.child("$pdfName.pdf/").putFile(pdfUri!!).addOnSuccessListener {
+                    Toast.makeText(
+                        this,
+                        "Added Sucssesfully to Firebase Storage",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    pdfName2.text.clear()
+                    if (progressDialog.isShowing) {
+                        progressDialog.dismiss()
+                    }
+                }.addOnFailureListener {
+                    Toast.makeText(
+                        this,
+                        "Failed to Add to Firebase Storage",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    if (progressDialog.isShowing) {
+                        progressDialog.dismiss()
+                    }
+                }
+                addToFirestore("$pdfName.pdf")
+            } else {
+                Toast.makeText(this, "Please Enter PDF Name & choose PDF File", Toast.LENGTH_LONG)
+                    .show()
             }
+            //  }
+
         }
 
 
     }
+
+    private fun addToFirestore(pdfName: String) {
+
+        val pdf = hashMapOf("pdfName" to pdfName)
+
+        db.collection("pdfNames").add(pdf).addOnSuccessListener {
+            Toast.makeText(this, "Added sucsessfully to Firestore ${it.id}", Toast.LENGTH_SHORT)
+                .show()
+            if (progressDialog.isShowing) {
+                progressDialog.dismiss()
+            }
+        }.addOnFailureListener {
+            Toast.makeText(this, "Faild To add To Firestore ${it.message}", Toast.LENGTH_SHORT)
+                .show()
+        }
+    }
+
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (resultCode == RESULT_OK) {
+            if (requestCode == ReqCodePDF) {
+                pdfUri = data!!.data!!
+//                uriText.text.clear()
+//                pdfName2.text.clear()
+            }
+        }
+        super.onActivityResult(requestCode, resultCode, data)
+
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//    private fun upload() {
+//        progressDialog.setMessage("Uploading....")
+//        progressDialog.show()
+//        //  ref.child("$pdfName/").putFile(pdfUri!!)
+//        val timeStamp = System.currentTimeMillis().toString()
+//        val filePathAndName = "Upload/$timeStamp"
+//        val storageReference = FirebaseStorage.getInstance()
+//            .getReference(filePathAndName)
+//        storageReference
+//            //.child("$pdfName/")
+//            .putFile(pdfUri!!)
+//            .addOnCompleteListener { task ->
+//                if (task.isSuccessful) {
+//                    storageReference.downloadUrl.addOnSuccessListener { uri ->
+////                        val hashMap: HashMap<String, String> = HashMap()
+////                        hashMap.put("pdfUrl", uri.toString())
+//
+//
+//                        //                        val pdfInfo = hashMapOf(
+//                        //                            "pdfName" to pdfName,
+//                        ////                        "pdfUrl" to pdfUri
+//                        //                        )
+//                        val map = HashMap<String, Any>()
+//                        map["pdfUrl"] = uri.toString()
+//                        map["pdfName"] = pdfName
+//
+//                        var db = FirebaseFirestore.getInstance()
+//                        db.collection(Constants.PDF)
+//                            .add(map)
+//                            .addOnSuccessListener {
+//                                progressDialog.dismiss()
+//                                Toast.makeText(
+//                                    this,
+//                                    "Uploaded SuccessFully...",
+//                                    Toast.LENGTH_SHORT
+//                                ).show()
+//                            }
+//
+//                            .addOnFailureListener {
+//                                progressDialog.dismiss()
+//                                Toast.makeText(this, "Failed to Upload!!", Toast.LENGTH_SHORT)
+//                                    .show()
+//                            }
+//                    }
+//                }
+//            }
+//    }
+
+
+//    fun downloadPdfFile(url: String, fileName: String) {
+//        val request = DownloadManager.Request(Uri.parse(url + ""))
+//        request.setTitle(fileName)
+//        request.setMimeType("application/pdf")
+//        request.allowScanningByMediaScanner()
+//        request.setAllowedOverMetered(true)
+//        request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+//        request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName)
+//        val dm = getSystemService(DOWNLOAD_SERVICE) as DownloadManager
+//        dm.enqueue(request)
+//    }
+
+
+}
+
+
 //
 //    private fun getData() {
 //
@@ -134,83 +286,6 @@ class MainActivity : AppCompatActivity()
 //
 //
 //    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (resultCode == RESULT_OK) {
-            if (requestCode == ReqCodePDF) {
-                pdfUri = data!!.data!!
-                upload()
-                uriText.text.clear()
-            }
-        }
-        super.onActivityResult(requestCode, resultCode, data)
-
-
-    }
-
-    private fun upload() {
-        progressDialog.setMessage("Uploading....")
-        progressDialog.show()
-        //  ref.child("$pdfName/").putFile(pdfUri!!)
-        val timeStamp = System.currentTimeMillis().toString()
-        val filePathAndName = "Upload/$timeStamp"
-        val storageReference = FirebaseStorage.getInstance()
-            .getReference(filePathAndName)
-        storageReference
-            //.child("$pdfName/")
-            .putFile(pdfUri!!)
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    storageReference.downloadUrl.addOnSuccessListener { uri ->
-//                        val hashMap: HashMap<String, String> = HashMap()
-//                        hashMap.put("pdfUrl", uri.toString())
-
-
-                        //                        val pdfInfo = hashMapOf(
-                        //                            "pdfName" to pdfName,
-                        ////                        "pdfUrl" to pdfUri
-                        //                        )
-                        val map = HashMap<String, Any>()
-                        map["pdfUrl"] = uri.toString()
-                        map["pdfName"] = pdfName
-
-                        var db = FirebaseFirestore.getInstance()
-                        db.collection(Constants.PDF)
-                            .add(map)
-                            .addOnSuccessListener {
-                                progressDialog.dismiss()
-                                Toast.makeText(
-                                    this,
-                                    "Uploaded SuccessFully...",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            }
-
-                            .addOnFailureListener {
-                                progressDialog.dismiss()
-                                Toast.makeText(this, "Failed to Upload!!", Toast.LENGTH_SHORT)
-                                    .show()
-                            }
-                    }
-                }
-            }
-    }
-
-
-//    fun downloadPdfFile(url: String, fileName: String) {
-//        val request = DownloadManager.Request(Uri.parse(url + ""))
-//        request.setTitle(fileName)
-//        request.setMimeType("application/pdf")
-//        request.allowScanningByMediaScanner()
-//        request.setAllowedOverMetered(true)
-//        request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-//        request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName)
-//        val dm = getSystemService(DOWNLOAD_SERVICE) as DownloadManager
-//        dm.enqueue(request)
-//    }
-
-
-}
 
 
 //                    private fun startDownloading() {

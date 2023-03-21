@@ -4,6 +4,7 @@ import android.app.AlertDialog
 import android.app.DownloadManager
 import android.content.Context
 import android.content.Context.DOWNLOAD_SERVICE
+import android.graphics.Color
 import android.net.Uri
 import android.os.Environment
 import android.view.LayoutInflater
@@ -15,11 +16,14 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.ContextCompat.getSystemService
 import androidx.recyclerview.widget.RecyclerView
+import com.example.uplaodpdftofirebasestorage.MainActivity
 import com.example.uplaodpdftofirebasestorage.R
 import com.example.uplaodpdftofirebasestorage.model.PdfInfo
 import com.example.uplaodpdftofirebasestorage.utils.Constants
 import com.example.uplaodpdftofirebasestorage.view.ShowPdfFiles
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 import kotlinx.android.synthetic.main.pdf_item.view.*
 
 class PdfAdapter(
@@ -28,7 +32,7 @@ class PdfAdapter(
     private val AddToRecycler: ArrayList<PdfInfo>,
     //val click:OnItemClickListener
 ) : RecyclerView.Adapter<PdfAdapter.PdfInfoViewHolder>() {
-    lateinit var pdfurll: String
+    lateinit var uriPdf: String
     lateinit var db: FirebaseFirestore
 
     class PdfInfoViewHolder(
@@ -37,7 +41,7 @@ class PdfAdapter(
     ) :
         RecyclerView.ViewHolder(itemView) {
         val pdfName: TextView = itemView.findViewById(R.id.pdfName)
-        val pdfUrl: TextView = itemView.findViewById(R.id.pdfUrl)
+        //val pdfUrl: TextView = itemView.findViewById(R.id.pdfUrl)
         // val pdfDownload: ImageView = itemView.findViewById(R.id.btnDownloadFile)
 
     }
@@ -56,6 +60,8 @@ class PdfAdapter(
                     R.layout.pdf_item,
                     parent, false
                 )
+        db = Firebase.firestore
+
         return PdfInfoViewHolder(itemView)
 
     }
@@ -64,31 +70,27 @@ class PdfAdapter(
 
         val addPdfFile = AddToRecycler[position]
         holder.pdfName.text = AddToRecycler[position].pdfName.toString()
-        holder.pdfUrl.text = AddToRecycler[position].pdfUrl.toString()
-
-        val url = AddToRecycler[position].pdfUrl.toString()
-
-        // holder.pdfDownload.text = AddToRecycler[position].pdfDownloaad.toString()
-//        holder.uAddress.text = AddToRecycler[position].uAddress.toString()
-//        holder.pdfDownload.setOnClickListener {
-//            click.onItemClickListener(AddToRecycler.get(position).pdfUrl!!)
-//        }
+        //holder.pdfUrl.text = AddToRecycler[position].pdfUrl.toString()
 
 
-//        ShowPdfFiles.reference =
-//            ShowPdfFiles.storageReference.child("$url")
-//        ShowPdfFiles.reference.downloadUrl.addOnSuccessListener {
-//            pdfurll = it.toString()
-//        }
-//            .addOnFailureListener {
-//                Toast.makeText(context, "Failed to download", Toast.LENGTH_SHORT).show()
-//            }
-//        holder.itemView.setOnClickListener {
-//            Toast.makeText(context, "$$url", Toast.LENGTH_SHORT).show()
-//            download(pdfurll, "$$url")
-//            notifyItemChanged(holder.adapterPosition)
-//        }
+        MainActivity.reference = MainActivity.storageReference.child("${addPdfFile.pdfName}/")
+        MainActivity.reference.downloadUrl.addOnSuccessListener {
+            uriPdf = it.toString()
+        }
 
+        holder.itemView.btnDownloadFile.setOnClickListener {
+            val builder = AlertDialog.Builder(context)
+            builder.setTitle("Download...")
+            builder.setMessage("Are You Want To Download this pdf file ?")
+            builder.setPositiveButton("Yes") { _, _ ->
+                Toast.makeText(context, "Downloading ${addPdfFile.pdfName}", Toast.LENGTH_SHORT).show()
+                download(uriPdf, "Downloading ${addPdfFile.pdfName}")
+            }
+            builder.setNegativeButton("No") { d, _ ->
+                d.dismiss()
+            }
+            builder.create().show()
+        }
 
 
         holder.itemView.btnDeleteUser.setOnClickListener {
@@ -97,7 +99,7 @@ class PdfAdapter(
             builder.setMessage("Are you sure uoy want to remove PDF File?")
 
             builder.setPositiveButton("Confirm") { dialog, which ->
-                FirebaseFirestore.getInstance().collection(Constants.PDF).document(addPdfFile.id!!)
+                FirebaseFirestore.getInstance().collection("pdfNames").document(addPdfFile.id!!)
                     .delete().addOnSuccessListener {
                         AddToRecycler.removeAt(position)
                         notifyDataSetChanged()
@@ -109,6 +111,9 @@ class PdfAdapter(
                 .show()
             notifyItemChanged(holder.adapterPosition)
         }
+
+
+
     }
 
 
@@ -124,21 +129,10 @@ class PdfAdapter(
         request.setAllowedOverMetered(true)
         request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
         request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName)
-        val dm = ShowPdfFiles.dM
-        dm.enqueue(request)
+        val downloadManager = MainActivity.downloadManager
+        downloadManager.enqueue(request)
     }
 }
 
 
-//fun downloadPdfFile(url: String, fileName: String) {
-//    val request = DownloadManager.Request(Uri.parse(url + ""))
-//    request.setTitle(fileName)
-//    request.setMimeType("application/pdf")
-//    request.allowScanningByMediaScanner()
-//    request.setAllowedOverMetered(true)
-//    request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-//    request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName)
-//    val dm = getSystemService(AppCompatActivity.DOWNLOAD_SERVICE) as DownloadManager
-//    dm.enqueue(request)
-//}
 

@@ -9,16 +9,32 @@
     tools:context=".MainActivity">
 
     <EditText
-        android:id="@+id/uriText"
+        android:id="@+id/pdfName2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="Enter PDF Name"
         android:layout_margin="30dp"
         android:gravity="center"
         android:layout_gravity="center"
-        android:layout_marginTop="60dp"
+        android:layout_marginTop="70dp"
         android:textStyle="bold|italic"
         android:textSize="20sp"
+        android:backgroundTint="@color/teal_700"
+
+        />
+
+    <Button
+        android:id="@+id/uriText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Choose PDF Name"
+        android:layout_margin="30dp"
+        android:gravity="center"
+        android:textAllCaps="false"
+        android:layout_gravity="center"
+        android:layout_marginTop="60dp"
+        android:textStyle="bold|italic"
+        android:backgroundTint="@color/teal_700"
         />
 
 
@@ -30,7 +46,7 @@
         android:layout_margin="20dp"
         android:textAllCaps="false"
         android:layout_marginTop="10dp"
-        android:backgroundTint="@color/purple_500"
+        android:backgroundTint="@color/teal_700"
         android:textStyle="bold|italic" />
 
 <!--    <EditText-->
@@ -50,10 +66,19 @@
         android:layout_height="wrap_content"
         android:text="Show PDF Files"
         android:layout_margin="20dp"
-        android:layout_marginTop="10dp"
         android:textAllCaps="false"
-        android:background="@color/black"
+        android:layout_marginTop="10dp"
+        android:backgroundTint="@color/teal_700"
         android:textStyle="bold|italic" />
+<!--    <Button-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:text="Show PDF Files"-->
+<!--        android:layout_margin="20dp"-->
+<!--        android:layout_marginTop="10dp"-->
+<!--        android:textAllCaps="false"-->
+<!--        android:background="@color/black"-->
+<!--        android:textStyle="bold|italic" />-->
 
 
 

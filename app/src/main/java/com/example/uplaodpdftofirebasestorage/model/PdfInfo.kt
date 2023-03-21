@@ -5,7 +5,7 @@ import com.example.uplaodpdftofirebasestorage.MainActivity
 data class PdfInfo(
     val id: String,
     val pdfName: String?,
-    val pdfUrl: String?,
+   // val pdfUrl: String?,
 )
 
 
